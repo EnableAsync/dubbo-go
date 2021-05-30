@@ -26,8 +26,8 @@ jobs:
     steps:
     - name: Test environment variables
       run: |
-        [[ -n "${{github.event.pull_request.head}}" ]]
-        echo github.event.pull_request.head
+        [[ -n "${{github.event.pull_request.head.repo}}" ]]
+        echo github.event.pull_request.head.repo
 
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
