@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, develop, feature/ci_test]
+    branches: [master, develop]
   pull_request:
     branches: "*"
 
@@ -25,60 +25,56 @@ jobs:
 
     steps:
 
-    - name: Test environment variables
-      run: |
-        echo $GITHUB_BASE_REF
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go_version }}
+        id: go
 
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ${{ matrix.go_version }}
-      id: go
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Cache dependencies
+        uses: actions/cache@v2.1.5
+        with:
+          # Cache
+          path: ~/go/pkg/mod
+          # Cache key
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-    - name: Cache dependencies
-      uses: actions/cache@v2.1.5
-      with:
-        # Cache
-        path: ~/go/pkg/mod
-        # Cache key
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
-        restore-keys: |
-          ${{ runner.os }}-go-
+      - name: Get dependencies
+        run: |
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          else
+              go get -v -t -d ./...
+          fi
 
-    - name: Get dependencies
-      run: |
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        else
-            go get -v -t -d ./...
-        fi
+      - name: gofmt
+        run: |
+          go fmt ./... && git status && [[ -z `git status -s` ]]
+          # diff -u <(echo -n) <(gofmt -d -s .)
 
-    - name: gofmt
-      run: |
-        go fmt ./... && git status && [[ -z `git status -s` ]]
-        # diff -u <(echo -n) <(gofmt -d -s .)
+      - name: Install go ci lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
 
-    - name: Install go ci lint
-      run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
+      - name: Run Linter
+        run: golangci-lint run --timeout=10m -v
 
-    - name: Run Linter
-      run: golangci-lint run --timeout=10m -v
+      - name: Verify
+        run: |
+          make verify
 
-    - name: Verify
-      run: |
-        make verify
+      - name: Integrate Test
+        run: |
+          chmod +x integrate_test.sh && [[ -n "${{github.event.pull_request.head.repo.full_name}}" ]] && [[ -n "${{github.event.pull_request.head.sha}}" ]] && && [[ -n "${{github.base_ref}}" ]] && ./integrate_test.sh ${{github.event.pull_request.head.repo.full_name}} ${{github.event.pull_request.head.sha}} ${{github.base_ref}} || ./integrate_test.sh $GITHUB_REPOSITORY $GITHUB_SHA $GITHUB_BASE_REF
 
-    - name: Integrate Test
-      run: |
-        chmod +x integrate_test.sh && [[ -n "${{github.event.pull_request.head.repo.full_name}}" ]] && [[ -n "${{github.event.pull_request.head.sha}}" ]] && ./integrate_test.sh ${{github.event.pull_request.head.repo.full_name}} ${{github.event.pull_request.head.sha}} || ./integrate_test.sh $GITHUB_REPOSITORY $GITHUB_SHA
+      - name: Post Coverage
+        run: bash <(curl -s https://codecov.io/bash)
 
-    - name: Post Coverage
-      run: bash <(curl -s https://codecov.io/bash)
-
-    - name: Hello world
-      run: echo Hello world ${{ secrets.DING_TOKEN }} ${{ secrets.DING_SIGN }}
+      - name: Hello world
+        run: echo Hello world ${{ secrets.DING_TOKEN }} ${{ secrets.DING_SIGN }}
