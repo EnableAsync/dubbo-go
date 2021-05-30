@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, develop]
+    branches: [master, develop, feature/ci_test]
   pull_request:
     branches: "*"
 
@@ -24,6 +24,10 @@ jobs:
       DING_SIGN: ${{ secrets.DING_SIGN }}
 
     steps:
+    - name: Test environment variables
+      run: |
+        [[ -n "${{github.event.pull_request.head}}" ]]
+        echo github.event.pull_request.head
 
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
