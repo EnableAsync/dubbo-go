@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.50.0 // indirect
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/RoaringBitmap/roaring v0.6.1
+	github.com/RoaringBitmap/roaring v0.7.1
 	github.com/Workiva/go-datastructures v1.0.52
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/alibaba/sentinel-golang v1.0.2
@@ -17,7 +17,6 @@ require (
 	github.com/dubbogo/go-zookeeper v1.0.3
 	github.com/dubbogo/gost v1.11.9
 	github.com/dubbogo/triple v1.0.0
-	github.com/elazarl/go-bindata-assetfs v1.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.4.0
 	github.com/frankban/quicktest v1.4.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
@@ -66,6 +65,5 @@ require (
 
 replace (
 	github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.8.0
-	github.com/shirou/gopsutil => github.com/shirou/gopsutil v0.0.0-20181107111621-48177ef5f880
 	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 )
